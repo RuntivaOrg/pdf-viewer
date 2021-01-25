@@ -1,32 +1,51 @@
-# Prerequisites
-*.d
+#CMakeLists.txt.user
+#CMakeCache.txt
+#CMakeFiles
+#CMakeScripts
+#Testing
+#Makefile
+#cmake_install.cmake
+#install_manifest.txt
+#compile_commands.json
+#CTestTestfile.cmake
+#_deps
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
+#Project Specific
+#/buildtools/**
+#/test/googletest/**
+#/third_party/**
+/out/**
 
-# Precompiled Headers
-*.gch
-*.pch
 
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
+# # Prerequisites
+# *.d
 
-# Fortran module files
-*.mod
-*.smod
+# # Compiled Object files
+# *.slo
+# *.lo
+# *.o
+# *.obj
 
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
+# # Precompiled Headers
+# *.gch
+# *.pch
 
-# Executables
-*.exe
-*.out
-*.app
+# # Compiled Dynamic libraries
+# *.so
+# *.dylib
+# *.dll
+
+# # Fortran module files
+# *.mod
+# *.smod
+
+# # Compiled Static libraries
+# *.lai
+# *.la
+# *.a
+# *.lib
+
+# # Executables
+# *.exe
+# *.out
+# *.app
