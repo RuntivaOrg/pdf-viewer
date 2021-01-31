@@ -24,6 +24,9 @@ RUN apt-get update \
     
     #libjpeg-dev
 
+#################################
+## Environment Installs
+#################################
 
 ## Install Emscripten SDK
 WORKDIR /opt
@@ -43,30 +46,44 @@ RUN cd /opt \
     && cd ..
 ENV PATH="/opt/depot_tools:${PATH}"
 
-## PDFium Source Code
-# Note that we checkout a specific branch to ensure build consistency.
-# we do not want to always be working off of the master branch
-RUN mkdir -p /build
-WORKDIR /build
-RUN gclient config --unmanaged https://pdfium.googlesource.com/pdfium.git 
-RUN gclient sync
-WORKDIR /build/pdfium
-RUN git checkout $PDFIUM_BRANCH
 
-## PDFium Build Dependencies
-RUN echo ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true | debconf-set-selections
-RUN sudo DEBIAN_FRONTEND=noninteractive apt-get install tzdata
+#################################
+## Source Code Installs
+#################################
 
-# Patch to remove snapcraft from dependencies as this fails in docker
-COPY ./patches/install-build-deps.sh ./build/ 
-RUN chmod +x ./build/install-build-deps.sh 
-RUN echo n | ./build/install-build-deps.sh
+#RUN mkdir -p /pdf-sln/runtiva-pdf
+VOLUME /pdf-sln/runtiva-pdf
+WORKDIR /pdf-sln/runtiva-pdf
+#ENTRYPOINT [ "./pdf-viewer/tools/docker-setup.sh" ]
+
+# ## PDFium Source Code
+# # Note that we checkout a specific branch to ensure build consistency.
+# # we do not want to always be working off of the master branch
+# WORKDIR /pdf-sln/runtiva-pdf
+# RUN gclient config --unmanaged https://pdfium.googlesource.com/pdfium.git 
+# RUN gclient sync
+# WORKDIR /pdf-sln/runtiva-pdf/pdfium
+# RUN git checkout $PDFIUM_BRANCH
+
+
+# ## PDFium Build Dependencies
+# RUN echo ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true | debconf-set-selections
+# RUN sudo DEBIAN_FRONTEND=noninteractive apt-get install tzdata
+
+# # Patch to remove snapcraft from dependencies as this fails in docker
+# COPY ./pdf-viewer/patches/install-build-deps.sh ./build/ 
+# RUN chmod +x ./build/install-build-deps.sh 
+# RUN echo n | ./build/install-build-deps.sh
+
+
+
+
 
 #Apply Patches
-COPY patches/pdfium.diff /build/pdfium/pdfium.diff
+#COPY ./patches/pdfium.diff /build/pdfium/pdfium.diff
 #RUN patch -i pdfium.diff -p1
 
-COPY patches/build.diff /build/pdfium/build/build.diff
+#COPY ./patches/build.diff /build/pdfium/build/build.diff
 #RUN patch -d build -i build.diff -p1
 
 

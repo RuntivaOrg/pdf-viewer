@@ -15,7 +15,8 @@
 #/test/googletest/**
 #/third_party/**
 /out/**
-
+/pdfium**
+#/_gclient**
 
 # # Prerequisites
 # *.d
