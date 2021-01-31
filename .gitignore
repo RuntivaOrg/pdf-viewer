@@ -16,6 +16,7 @@
 #/third_party/**
 /out/**
 /pdfium**
+/build**
 #/_gclient**
 
 # # Prerequisites

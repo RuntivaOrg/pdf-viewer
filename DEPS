@@ -1,6 +1,6 @@
 use_relative_paths = True
 
-gclient_gn_args_file = 'pdfium/build/config/gclient_args.gni'
+gclient_gn_args_file = 'build/config/gclient_args.gni'
 gclient_gn_args = [
   'checkout_google_benchmark',
 ]
@@ -211,7 +211,7 @@ deps = {
     Var('chromium_git') + '/chromium/src/tools/memory@' +
         Var('tools_memory_revision'),
 
-  'pdfium/v8':
+  'v8':
     Var('chromium_git') + '/v8/v8.git@' + Var('v8_revision'),
 }
 
