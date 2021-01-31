@@ -125,10 +125,10 @@ deps = {
     Var('chromium_git') + '/chromium/src/base/trace_event/common.git@' +
         Var('trace_event_revision'),
 
-  'pdfium/build':
+  'build':
     Var('chromium_git') + '/chromium/src/build.git@' + Var('build_revision'),
 
-  'pdfium/buildtools':
+  'buildtools':
     Var('chromium_git') + '/chromium/src/buildtools.git@' +
         Var('buildtools_revision'),
 
@@ -217,13 +217,13 @@ deps = {
 
 recursedeps = [
   # buildtools provides clang_format, libc++, and libc++abi
-  'pdfium/buildtools',
+  'buildtools',
 ]
 
 include_rules = [
   # Basic stuff that everyone can use.
   # Note: public is not here because core cannot depend on public.
-  '+pdfium/build/build_config.h',
+  '+build/build_config.h',
   '+pdfium/constants',
   '+pdfium/testing',
   '+pdfium/third_party/base',
@@ -272,7 +272,7 @@ hooks = [
     'name': 'mac_toolchain',
     'pattern': '.',
     'condition': 'checkout_mac',
-    'action': ['python', 'pdfium/build/mac_toolchain.py'],
+    'action': ['python', 'build/mac_toolchain.py'],
   },
   # Pull clang-format binaries using checked-in hashes.
   {
@@ -296,7 +296,7 @@ hooks = [
                 '--no_resume',
                 '--no_auth',
                 '--bucket', 'chromium-clang-format',
-                '-s', 'pdfium/buildtools/mac/clang-format.sha1',
+                '-s', 'buildtools/mac/clang-format.sha1',
     ],
   },
   {
@@ -308,7 +308,7 @@ hooks = [
                 '--no_resume',
                 '--no_auth',
                 '--bucket', 'chromium-clang-format',
-                '-s', 'pdfium/buildtools/linux64/clang-format.sha1',
+                '-s', 'buildtools/linux64/clang-format.sha1',
     ],
   },
   {
@@ -323,35 +323,35 @@ hooks = [
     'name': 'sysroot_arm',
     'pattern': '.',
     'condition': 'checkout_linux and checkout_arm',
-    'action': ['python', 'pdfium/build/linux/sysroot_scripts/install-sysroot.py',
+    'action': ['python', 'build/linux/sysroot_scripts/install-sysroot.py',
                '--arch=arm'],
   },
   {
     'name': 'sysroot_arm64',
     'pattern': '.',
     'condition': 'checkout_linux and checkout_arm64',
-    'action': ['python', 'pdfium/build/linux/sysroot_scripts/install-sysroot.py',
+    'action': ['python', 'build/linux/sysroot_scripts/install-sysroot.py',
                '--arch=arm64'],
   },
   {
     'name': 'sysroot_x86',
     'pattern': '.',
     'condition': 'checkout_linux and (checkout_x86 or checkout_x64)',
-    'action': ['python', 'pdfium/build/linux/sysroot_scripts/install-sysroot.py',
+    'action': ['python', 'build/linux/sysroot_scripts/install-sysroot.py',
                '--arch=x86'],
   },
   {
     'name': 'sysroot_mips',
     'pattern': '.',
     'condition': 'checkout_linux and checkout_mips',
-    'action': ['python', 'pdfium/build/linux/sysroot_scripts/install-sysroot.py',
+    'action': ['python', 'build/linux/sysroot_scripts/install-sysroot.py',
                '--arch=mips'],
   },
   {
     'name': 'sysroot_x64',
     'pattern': '.',
     'condition': 'checkout_linux and checkout_x64',
-    'action': ['python', 'pdfium/build/linux/sysroot_scripts/install-sysroot.py',
+    'action': ['python', 'build/linux/sysroot_scripts/install-sysroot.py',
                '--arch=x64'],
   },
   {
@@ -382,7 +382,7 @@ hooks = [
     # Update LASTCHANGE.
     'name': 'lastchange',
     'pattern': '.',
-    'action': ['python', 'pdfium/build/util/lastchange.py',
-               '-o', 'pdfium/build/util/LASTCHANGE'],
+    'action': ['python', 'build/util/lastchange.py',
+               '-o', 'build/util/LASTCHANGE'],
   },
 ]
