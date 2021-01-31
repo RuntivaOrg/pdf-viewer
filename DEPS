@@ -304,7 +304,7 @@ hooks = [
                 '--no_resume',
                 '--no_auth',
                 '--bucket', 'chromium-clang-format',
-                '-s', 'buildtools/linux64/clang-format.sha1',
+                '-s', 'pdfium/buildtools/linux64/clang-format.sha1',
     ],
   },
   {
