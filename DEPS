@@ -142,7 +142,7 @@ deps = {
     'condition': 'checkout_android',
   },
 
-  'pdfium/hird_party/depot_tools':
+  'pdfium/third_party/depot_tools':
     Var('chromium_git') + '/chromium/tools/depot_tools.git@' +
         Var('depot_tools_revision'),
 
