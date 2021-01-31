@@ -69,18 +69,7 @@ vars = {
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling icu
   # and whatever else without interference from each other.
-  'icu_revision': '899e18383fd732b47e6978db2b960a1b2a80179b',
-  # Three lines of non-changing comments so that
-  # the commit queue can handle CLs rolling instrumented_lib
-  # and whatever else without interference from each other.
-  'instrumented_lib_revision': '4d3867052d35b2171f2edbb3466fa8f7e2d11319',
-  # Three lines of non-changing comments so that
-  # the commit queue can handle CLs rolling jinja2
-  # and whatever else without interference from each other.
-  'jinja2_revision': '11b6b3e5971d760bd2d310f77643f55a818a6d25',
-  # Three lines of non-changing comments so that
-  # the commit queue can handle CLs rolling jpeg_turbo
-  # and whatever else without interference from each other.
+  'icu_revision': '899pdfiumr else without interference from each other.
   'jpeg_turbo_revision': '518d81558c797486e125e37cb529d65b560a6ea0',
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling markupsafe
@@ -117,6 +106,10 @@ vars = {
 }
 
 deps = {
+  'pdfium':
+    Var('pdfium_git') + '/pdfium.git@' +
+      Var('pdfium'),
+
   'pdfium/base/trace_event/common':
     Var('chromium_git') + '/chromium/src/base/trace_event/common.git@' +
         Var('trace_event_revision'),
