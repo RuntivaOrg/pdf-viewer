@@ -17,6 +17,7 @@
 /out/**
 /pdfium**
 /build**
+/v8**
 #/_gclient**
 
 # # Prerequisites
