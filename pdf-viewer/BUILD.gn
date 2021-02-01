@@ -1,0 +1,124 @@
+group("pdfium_public_headers") {
+  public_deps = [ ":pdfium_public_headers_impl" ]
+  public_configs = [
+    ":pdfium_public_config",
+    ":pdfium_implementation_config",
+  ]
+}
+
+# Runtiva: Patch -- Adding new component for runtiva-viewer
+component("run-viewer") {
+  libs = []
+  configs += [ ":pdfium_core_config" ]
+  public_configs = [ ":pdfium_public_config" ]
+
+  deps = [
+    "//runtiva-viewer/cpp:viewer",
+  ]
+
+  if (is_win) {
+    libs += [
+      "advapi32.lib",
+      "gdi32.lib",
+      "user32.lib",
+    ]
+  }
+  
+  
+  
+  
+  
+
+
+
+
+
+
+# Copyright 2020 Runtiva LLC. All rights reserved.
+
+#import("../../pdfium.gni")
+#import("../../testing/test.gni")
+
+executable("viewer") {
+  sources = [
+    "src/main.cpp",
+    "src/application.cpp",
+    "src/color.cpp",
+    "src/deja_vu_sans_mono.cpp",
+    "src/emscripten.cpp",
+    "src/globals.cpp",
+    "src/main_viewer_window.cpp",
+    "src/layout.cpp",
+    "src/layoutable.cpp",
+    "src/painter.cpp",
+    "src/to_utf16.cpp",
+    "src/widget.cpp",
+    
+    "src/events/key_event.cpp",
+    "src/events/text_input_event.cpp",
+
+    "src/pdfium/file_access_for_testing.cpp",
+    "src/pdfium/file_access_test_loader.cpp",
+    "src/pdfium/pdf_test_write_helper.cpp",
+    "src/pdfium/png_image_utils.cpp",
+  ]
+  configs += [ 
+    # "//:runtiva_core_config", # High level of error/warning checking
+    "../third_party:sdl2", 
+    "../third_party:sdl2_ttf",
+    "../third_party:sdl2_image",
+    ":viewer_includes",
+    "../third_party:pdfium_lib",
+    
+  ]
+  # if (is_win) {
+  #   cflags_cc = [ "/std:c++17" ]
+  # } else {
+  #   cflags_cc = [ "-std=c++17" ]
+  # }
+  
+  deps = [ "//:pdfium", ":viewer_files", "../third_party:libpng", ]
+  visibility = [ "../../*" ]
+}
+
+source_set("viewer_files") {
+  sources = [
+
+    "src/viewer/document.cpp",
+    "src/viewer/geometry.cpp",
+    "src/viewer/layout.cpp",
+    "src/viewer/page.cpp",
+    "src/viewer/panel.cpp",
+    "src/viewer/params.cpp",
+    "src/viewer/scroll.cpp",
+    "src/viewer/slot.cpp",
+    "src/viewer/view.cpp",
+    "src/viewer/zoom.cpp",
+  ]
+  configs += [ 
+    "../third_party:sdl2", 
+    "../third_party:sdl2_ttf",
+    "../third_party:sdl2_image",
+    ":viewer_includes",
+    "../third_party:pdfium_lib",
+  ]
+
+  #cflags_cc   = [ "/std:c++17" ]
+}
+
+config("viewer_includes") {
+  include_dirs = [ "include", "../third_party"]
+  if (is_wasm) {
+    cflags = ["-s", "EXPORTED_FUNCTIONS=[\"_main\",\"_resize_viewer\"]"]
+    if (is_debug) {
+      cflags += ["--source-map-base", "/"]
+    }
+  }
+}
+
+
+# pdfium_unittest_source_set("unittests") {
+#   sources = [ "fx_crypt_unittest.cpp" ]
+#   deps = [ ":fdrm" ]
+#   pdfium_root_dir = "../../"
+# }
