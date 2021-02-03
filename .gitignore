@@ -18,6 +18,8 @@
 /pdfium**
 /build**
 /v8**
+/third_party/externals/**
+/pdf-viewer/third_party/externals/**
 #/_gclient**
 
 # # Prerequisites

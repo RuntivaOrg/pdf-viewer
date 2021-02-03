@@ -1,0 +1,23 @@
+# Copyright 2016 Google Inc.
+#
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+declare_args() {
+}
+
+import("../third_party.gni")
+
+third_party("libsdl_ttf") {
+  public_include_dirs = [ "../externals/SDL_ttf" ]
+
+  # include_dirs = [ "." ]
+  sources = [
+    "../externals/SDL_ttf/SDL_ttf.c",
+  ]
+
+  deps = [ 
+    "../../../../third_party:fx_freetype",
+    "../libsdl",
+  ]
+}

@@ -12,6 +12,7 @@ ENABLE_WARNINGS
 #include <string>
 #include <iostream>
 #include <sstream>
+#include <climits>
 
 bool _check_dimensions(int stride, int width, int height) {
   if (stride < 0 || width < 0 || height < 0)

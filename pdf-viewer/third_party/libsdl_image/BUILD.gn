@@ -1,0 +1,40 @@
+# Copyright 2016 Google Inc.
+#
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+declare_args() {
+}
+
+import("../third_party.gni")
+
+third_party("libsdl_image") {
+  public_include_dirs = [ "../externals/SDL_image" ]
+
+  # include_dirs = [ "." ]
+  sources = [
+    "../externals/SDL_image/IMG.c",
+    "../externals/SDL_image/IMG_bmp.c",
+    "../externals/SDL_image/IMG_gif.c",
+    "../externals/SDL_image/IMG_jpg.c",
+    "../externals/SDL_image/IMG_lbm.c",
+    "../externals/SDL_image/IMG_pcx.c",
+    "../externals/SDL_image/IMG_png.c",
+    "../externals/SDL_image/IMG_pnm.c",
+    "../externals/SDL_image/IMG_svg.c",
+    "../externals/SDL_image/IMG_tga.c",
+    "../externals/SDL_image/IMG_tif.c",
+    "../externals/SDL_image/IMG_xcf.c",
+    "../externals/SDL_image/IMG_xpm.c",
+    "../externals/SDL_image/IMG_xv.c",
+    "../externals/SDL_image/IMG_webp.c",
+    "../externals/SDL_image/IMG_WIC.c",
+    "../externals/SDL_image/miniz.h",
+    "../externals/SDL_image/nanosvg.h",
+    "../externals/SDL_image/nanosvgrast.h", 
+  ]
+
+  deps = [ 
+    "../libsdl",
+  ]
+}

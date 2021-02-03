@@ -35,6 +35,9 @@ DISABLE_WARNINGS
 ENABLE_WARNINGS
 #endif
 
+// TODO: Delete this line -- it is already defined in "third_party/base/notreached.h"
+#define NOTREACHED() DCHECK(false)
+
 namespace png_image_utils {
 
 namespace {

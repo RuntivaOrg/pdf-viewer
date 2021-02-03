@@ -1,45 +1,9 @@
-group("pdfium_public_headers") {
-  public_deps = [ ":pdfium_public_headers_impl" ]
-  public_configs = [
-    ":pdfium_public_config",
-    ":pdfium_implementation_config",
-  ]
-}
-
-# Runtiva: Patch -- Adding new component for runtiva-viewer
-component("run-viewer") {
-  libs = []
-  configs += [ ":pdfium_core_config" ]
-  public_configs = [ ":pdfium_public_config" ]
-
-  deps = [
-    "//runtiva-viewer/cpp:viewer",
-  ]
-
-  if (is_win) {
-    libs += [
-      "advapi32.lib",
-      "gdi32.lib",
-      "user32.lib",
-    ]
-  }
-  
-  
-  
-  
-  
-
-
-
-
-
-
 # Copyright 2020 Runtiva LLC. All rights reserved.
 
 #import("../../pdfium.gni")
 #import("../../testing/test.gni")
 
-executable("viewer") {
+executable("pdf-viewer") {
   sources = [
     "src/main.cpp",
     "src/application.cpp",
@@ -64,20 +28,35 @@ executable("viewer") {
   ]
   configs += [ 
     # "//:runtiva_core_config", # High level of error/warning checking
-    "../third_party:sdl2", 
-    "../third_party:sdl2_ttf",
-    "../third_party:sdl2_image",
-    ":viewer_includes",
-    "../third_party:pdfium_lib",
     
+    #"third_party:sdl2_ttf",
+    #"third_party:sdl2_image",
+    ":viewer_includes",
+    "third_party:pdfium_lib",
+    "../../third_party:system_libpng_config",
+    
+  ]
+
+  include_dirs = [ "//pdfium", "XXX/YYY" ]
+
+  deps = [
+    "third_party/libsdl", 
+    "third_party/libsdl_ttf",
+    "third_party/libsdl_image",
   ]
   # if (is_win) {
   #   cflags_cc = [ "/std:c++17" ]
   # } else {
+  #   #cflags_cc += [ "-std=c++14" ]
   #   cflags_cc = [ "-std=c++17" ]
   # }
   
-  deps = [ "//:pdfium", ":viewer_files", "../third_party:libpng", ]
+  deps += [ 
+    "//:pdfium", 
+    ":viewer_files", 
+    #"../../third_party:png",
+    #"third_party:libpng", 
+  ]
   visibility = [ "../../*" ]
 }
 
@@ -96,18 +75,25 @@ source_set("viewer_files") {
     "src/viewer/zoom.cpp",
   ]
   configs += [ 
-    "../third_party:sdl2", 
-    "../third_party:sdl2_ttf",
-    "../third_party:sdl2_image",
+    #"third_party:sdl2", 
+    #"third_party:sdl2_ttf",
+    #"third_party:sdl2_image",
     ":viewer_includes",
-    "../third_party:pdfium_lib",
+    "third_party:pdfium_lib",
+  ]
+
+  deps = [
+    "third_party/libsdl", 
+    "third_party/libsdl_ttf",
+    "third_party/libsdl_image",
   ]
 
   #cflags_cc   = [ "/std:c++17" ]
 }
 
 config("viewer_includes") {
-  include_dirs = [ "include", "../third_party"]
+  include_dirs = [ "include", "third_party"]
+  is_wasm = false
   if (is_wasm) {
     cflags = ["-s", "EXPORTED_FUNCTIONS=[\"_main\",\"_resize_viewer\"]"]
     if (is_debug) {

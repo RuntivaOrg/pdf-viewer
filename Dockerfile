@@ -121,8 +121,33 @@ WORKDIR /pdf-sln/runtiva-pdf
 
 #./build/install-build-deps.sh --no-prompt --no-arm --no-chromeos-fonts --no-backwards-compatible
 
+#/home/roger/pdf-sln/pdfium/runtiva-pdf/pdf-viewer/externals
+WORKDIR /pdf-sln/pdfium/runtiva-pdf/pdf-viewer/third_party/externals
+RUN git clone https://skia.googlesource.com/third_party/sdl
+# RUN wget https://libsdl.org/release/SDL2-2.0.14.tar.gz \
+#     && tar zxf SDL2-2.0.14.tar.gz \
+#     && mv SDL2-2.0.14 sdl2 \
+#     && rm SDL2-2.0.14.tar.gz
+
+# TODO: Update src/dynapi/SDL_dynapi.h -- line: 65 -- #define SDL_DYNAMIC_API 0
+# TODO: Update src/SDL_internal.h -- line:58 -- #define SDL_LEAN_AND_MEAN               1 // Runtiva: Patch -- updated to 1
+# TODO: Update include/SDL_config.h
+#   -#if defined(__WIN32__)
+#   +#ifdef USING_PREMAKE_CONFIG_H
+#   +#include "SDL_config_premake.h"
+#   +#elif defined(__WIN32__)
 
 
+#SDL_TTF
+RUN git clone https://github.com/SDL-mirror/SDL_ttf.git \
+    && cd SDL_ttf \
+    && git checkout c0295db5fbf0e06148e47be0e7fc37ac8703162b
+
+
+#SDL2_Image
+RUN git clone https://github.com/SDL-mirror/SDL_image.git \
+    && cd SDL_image \
+    && git checkout b4f28c1fc9ab2f91ae594fc3e86622c5c13ffbbb
 
 #RUN wget https://github.com/emscripten-core/emscripten/archive/2.0.12.tar.gz
 #RUN tar zxf 2.0.12.tar.gz

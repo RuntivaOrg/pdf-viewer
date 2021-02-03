@@ -5,8 +5,8 @@
 #import("//pdfium/testing/test.gni")
 #import("pdfium.gni")
 
-component("pdfium_lib") {
-  deps = [ "pdfium" ]
-  sources = ["main.cpp"]
+# component("pdfium_lib") {
+#   deps = [ "pdfium" ]
+#   sources = ["main.cpp"]
 
-}
+# }
