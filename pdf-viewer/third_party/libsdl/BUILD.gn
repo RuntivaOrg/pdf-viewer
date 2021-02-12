@@ -8,7 +8,32 @@ declare_args() {
 
 import("../third_party.gni")
 
-third_party("libsdl") {
+# SDL  - requires different build steps depending on target_os
+group("libsdl") {
+    # if (is_wasm) {
+    #     cflags = [ "-s", "USE_SDL=2" ]
+    #     ldflags = [ "-s", "USE_SDL=2" ]
+    # } else 
+    if (is_win) {
+      public_configs = [ ":sdl2_win_prebuilt" ]
+      #  public_deps = [ ":sdl2" ]
+      #public_deps = [ ":sdl2_win_main" ]
+    } else if (is_linux) {
+        message("***************** SHOULNDT BE HERE")
+        public_deps = [ ":sdl2" ]
+    }
+}
+
+config("sdl2_win_prebuilt") {
+    include_dirs = [ "../externals/SDL2-2.0.14/include" ]
+    libs = [  "../externals/SDL2-2.0.14/lib/x64/SDL2main.lib", "../externals/SDL2-2.0.14/lib/x64/SDL2.lib", "shell32.lib" ]
+    # ldflags = [ "/nodefaultlib" ] 
+    # ldflags = [ "/SUBSYSTEM:CONSOLE" ]
+}
+
+third_party("sdl2") {
+
+  enabled = !is_win
   public_include_dirs = [ "../externals/sdl/include" ]
 
   include_dirs = [ "." ]

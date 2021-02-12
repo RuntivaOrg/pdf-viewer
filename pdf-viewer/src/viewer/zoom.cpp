@@ -16,6 +16,10 @@ Zoom::Zoom(float zoom_level) {
              1.5f, 2.0f,   3.0f,  4.0f, 6.0f,   8.0f, 12.0f,  16.0f, 32.0f, 64.0f});
 }
 
+Zoom::~Zoom() {
+    
+}
+
 float Zoom::get_zoom_level() const { return zoom_info.zoom_level; }
 ZoomMode Zoom::get_zoom_mode() const { return zoom_info.mode; }
 

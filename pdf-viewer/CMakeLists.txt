@@ -26,7 +26,7 @@ add_executable(${projname}
 
     src/viewer/document.cpp
 	src/viewer/geometry.cpp
-	src/viewer/layout.cpp
+	src/viewer/panel_layout.cpp
 	src/viewer/page.cpp
 	src/viewer/panel.cpp
 	src/viewer/params.cpp

@@ -5,6 +5,8 @@
 
 namespace PdfViewer::Viewer {
 
+Panel::Panel() {
+}
 
 Panel::Panel(Slot slot) { 
 	slots.push_back(slot); 
@@ -14,6 +16,12 @@ Panel::Panel(std::vector<Slot> slots) {
 	this->slots.insert(this->slots.end(), slots.begin(), slots.end()); 
 }
 
+Panel::Panel(const Panel &other) {
+    slots = other.slots;
+}
+
+Panel::~Panel(){
+}
 
 Rect Panel::get_panel_rect() const {
 

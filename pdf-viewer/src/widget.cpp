@@ -116,7 +116,7 @@ SDL_Renderer* Widget::renderer() { return ancestor()->renderer_; }
 
 int Widget::gLeft() const {
     int res = 0;
-    auto w = this;
+    const Widget* w = this;
     while (w) {
         res += w->left();
         w = w->parent();
@@ -126,7 +126,7 @@ int Widget::gLeft() const {
 
 int Widget::gTop() const {
     int res = 0;
-    auto w = this;
+    const Widget* w = this;
     while (w) {
         res += w->top();
         w = w->parent();
@@ -187,7 +187,7 @@ void Widget::updateWithoutRedraw() {
     r.h = height();
     SDL_SetRenderTarget(renderer(), nullptr);
     SDL_RenderCopy(renderer(), texture_, nullptr, &r);
-    for (auto child : children()) child->updateWithoutRedraw();
+    for (Widget* child : children()) child->updateWithoutRedraw();
     if (!parent_) SDL_RenderPresent(renderer_);
 }
 
@@ -201,7 +201,7 @@ void Widget::internalPaint(PaintEvent& event) {
     r.h = height();
     SDL_SetRenderTarget(renderer(), nullptr);
     SDL_RenderCopy(renderer(), texture_, nullptr, &r);
-    for (auto child : children()) child->internalPaint(event);
+    for (Widget* child : children()) child->internalPaint(event);
     needRepaint_ = false;
     if (!parent_) SDL_RenderPresent(renderer_);
 }

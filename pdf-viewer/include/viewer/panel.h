@@ -11,10 +11,12 @@ namespace PdfViewer::Viewer {
 // Panel contains a collection of Slots that are laid out horizontally or vertically. 
 class Panel {
 public:
-    Panel() = default;
+    Panel();
     Panel(Slot slot);
     Panel(std::vector<Slot> slots);
-
+    Panel(const Panel &other);
+    ~Panel();
+    
     int get_slot_count() const { return static_cast<int>(slots.size()); }
     Rect get_panel_rect() const; 
 

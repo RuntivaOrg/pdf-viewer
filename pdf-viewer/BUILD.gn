@@ -3,7 +3,30 @@
 #import("../../pdfium.gni")
 #import("../../testing/test.gni")
 
+config("pdf_viewer_config") {
+  cflags = []
+  ldflags = []
+  defines = [
+    "PNG_PREFIX",
+    "PNG_USE_READ_MACROS",
+  ]
+  include_dirs = [ ".." ]
+  # if (pdf_use_skia) {
+  #   defines += [ "PDF_ENABLE_SKIA" ]
+  # } else if (pdf_use_skia_paths) {
+  #   defines += [ "PDF_ENABLE_SKIA_PATHS" ]
+  # }
+  # if (is_asan) {
+  #   defines += [ "PDF_ENABLE_ASAN" ]
+  # }
+
+  # if (enable_callgrind) {
+  #   defines += [ "ENABLE_CALLGRIND" ]
+  # }
+}
+
 executable("pdf-viewer") {
+  testonly = true
   sources = [
     "src/main.cpp",
     "src/application.cpp",
@@ -11,13 +34,15 @@ executable("pdf-viewer") {
     "src/deja_vu_sans_mono.cpp",
     "src/emscripten.cpp",
     "src/globals.cpp",
-    "src/main_viewer_window.cpp",
     "src/layout.cpp",
     "src/layoutable.cpp",
+    "src/main_viewer_window.cpp",
     "src/painter.cpp",
     "src/to_utf16.cpp",
     "src/widget.cpp",
     
+    "src/core/rendered_page_cache.cpp",
+
     "src/events/key_event.cpp",
     "src/events/text_input_event.cpp",
 
@@ -25,47 +50,10 @@ executable("pdf-viewer") {
     "src/pdfium/file_access_test_loader.cpp",
     "src/pdfium/pdf_test_write_helper.cpp",
     "src/pdfium/png_image_utils.cpp",
-  ]
-  configs += [ 
-    # "//:runtiva_core_config", # High level of error/warning checking
-    
-    #"third_party:sdl2_ttf",
-    #"third_party:sdl2_image",
-    ":viewer_includes",
-    "third_party:pdfium_lib",
-    "../../third_party:system_libpng_config",
-    
-  ]
-
-  include_dirs = [ "//pdfium", "XXX/YYY" ]
-
-  deps = [
-    "third_party/libsdl", 
-    "third_party/libsdl_ttf",
-    "third_party/libsdl_image",
-  ]
-  # if (is_win) {
-  #   cflags_cc = [ "/std:c++17" ]
-  # } else {
-  #   #cflags_cc += [ "-std=c++14" ]
-  #   cflags_cc = [ "-std=c++17" ]
-  # }
-  
-  deps += [ 
-    "//:pdfium", 
-    ":viewer_files", 
-    #"../../third_party:png",
-    #"third_party:libpng", 
-  ]
-  visibility = [ "../../*" ]
-}
-
-source_set("viewer_files") {
-  sources = [
 
     "src/viewer/document.cpp",
     "src/viewer/geometry.cpp",
-    "src/viewer/layout.cpp",
+    "src/viewer/panel_layout.cpp",
     "src/viewer/page.cpp",
     "src/viewer/panel.cpp",
     "src/viewer/params.cpp",
@@ -73,25 +61,88 @@ source_set("viewer_files") {
     "src/viewer/slot.cpp",
     "src/viewer/view.cpp",
     "src/viewer/zoom.cpp",
+
+    # Include Files
+    "include/application.h",
+    "include/color.h",
+    "include/deja_vu_sans_mono.h",
+    "include/globals.h",
+    "include/layout.h",
+    "include/layoutable.h",
+    "include/main_viewer_window.h",
+    "include/painter.h",
+    "include/to_utf16.h",
+    "include/widget.h",
+
+    "include/core/rendered_page_cache.h",
+
+    "include/events/key_event.h",
+    "include/events/text_input_event.h",
+
+    "include/pdfium/file_access_for_testing.h",
+    "include/pdfium/file_access_test_loader.h",
+    "include/pdfium/pdf_test_write_helper.h",
+    "include/pdfium/png_image_utils.h",
+
+    "include/viewer/document.h",
+    "include/viewer/geometry.h",
+    "include/viewer/panel_layout.h",
+    "include/viewer/page.h",
+    "include/viewer/panel.h",
+    "include/viewer/params.h",
+    "include/viewer/scroll.h",
+    "include/viewer/slot.h",
+    "include/viewer/view.h",
+    "include/viewer/zoom.h",
   ]
-  configs += [ 
-    #"third_party:sdl2", 
+  configs += [
+    ":pdf_viewer_config",
+    # "//:pdfium_core_config", 
+    # "//:runtiva_core_config", # High level of error/warning checking
+    
     #"third_party:sdl2_ttf",
     #"third_party:sdl2_image",
-    ":viewer_includes",
+    ":pdf_viewer_includes",
     "third_party:pdfium_lib",
+    #"../../third_party:system_libpng_config",
+    
   ]
-
+  #libs = [ "//third_party:png" ]
+  
+  include_dirs = [ "//pdfium" ]
+  #public_deps = [ "../../third_party:fx_lpng" ]
   deps = [
-    "third_party/libsdl", 
+    "../../testing:test_support",
+    #"../../testing/image_diff",
+
+    "../../third_party:png",
+    "../../third_party:zlib",
+    "third_party/libsdl",
+    #"third_party/libsdl", 
     "third_party/libsdl_ttf",
     "third_party/libsdl_image",
+    #"../../third_party:png",
   ]
-
-  #cflags_cc   = [ "/std:c++17" ]
+  # ldflags = []
+  #   ldflags -= [ "/WX" ]
+  if (is_win) {
+    cflags_cc = [ "/std:c++17" ]
+  } else {
+    #cflags_cc += [ "-std=c++14" ]
+    cflags_cc = [ "-std=c++17" ]
+  }
+  
+  deps += [ 
+    "//:pdfium", 
+    #"../../third_party:png",
+    #"third_party:libpng", 
+  ]
+  visibility = [ "../../*" ]
 }
 
-config("viewer_includes") {
+
+config("pdf_viewer_includes") {
+
   include_dirs = [ "include", "third_party"]
   is_wasm = false
   if (is_wasm) {

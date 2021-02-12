@@ -12,6 +12,9 @@ Layout::Layout(Style style):
 {
 }
 
+Layout::~Layout() {
+}
+
 void Layout::addLayoutable(Layoutable *value)
 {
   layoutablesList_.push_back(value);
@@ -94,12 +97,12 @@ void Layout::resize(int width, int height)
   if (style_ == Vertical)
   {
     std::vector<std::pair<int, int> > minMax;
-    for (auto &l: layoutablesList_)
+    for (Layoutable* l: layoutablesList_)
       minMax.push_back(std::make_pair(l->minHeight(), l->maxHeight()));
     auto heights = calculateDimensions(minMax, height_);
     auto heightsIter = begin(heights);
     auto t = top_;
-    for (auto &l: layoutablesList_)
+    for (Layoutable* l: layoutablesList_)
     {
       l->setLeft(left_);
       l->setTop(t);
@@ -111,12 +114,12 @@ void Layout::resize(int width, int height)
   else if (style_ == Horizontal)
   {
     std::vector<std::pair<int, int> > minMax;
-    for (auto &l: layoutablesList_)
+    for (Layoutable* l: layoutablesList_)
       minMax.push_back(std::make_pair(l->minWidth(), l->maxWidth()));
     auto widths = calculateDimensions(minMax, width_);
     auto widthsIter = begin(widths);
     auto lt = left_;
-    for (auto &l: layoutablesList_)
+    for (Layoutable* l: layoutablesList_)
     {
       l->setLeft(lt);
       l->setTop(top_);

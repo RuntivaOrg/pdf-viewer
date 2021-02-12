@@ -27,13 +27,14 @@
 #ifdef USE_SYSTEM_LIBPNG
 #include <png.h>
 #else
+#include "third_party/libpng16/png.h"
+#endif
+
 
 DISABLE_WARNINGS
-#pragma GCC diagnostic ignored "-Wmacro-redefined"
-#include "libpng16/png.h"
+//#pragma GCC diagnostic ignored "-Wmacro-redefined"
 #include "third_party/base/notreached.h"
 ENABLE_WARNINGS
-#endif
 
 // TODO: Delete this line -- it is already defined in "third_party/base/notreached.h"
 #define NOTREACHED() DCHECK(false)

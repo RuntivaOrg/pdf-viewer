@@ -5,10 +5,14 @@
 
 #include <iostream>
 #include <cassert>
+#include <chrono>
+
+using std::chrono::nanoseconds;
+using std::chrono::duration_cast;
 
 namespace PdfViewer::Viewer {
 
-View::View(Widget* parent, Params params, LayoutType type)
+View::View(Widget* parent, Params params, PanelLayoutType type)
         : Widget(parent)
         , view_layout(params, type)
         , view_viewport(0, 0, 0, 0)
@@ -22,12 +26,17 @@ View::View(Widget* parent, Params params, LayoutType type)
     calculate_scroll_pos();
 }
 
+View::~View() {
+
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////////////////
 // Layout
 void View::layout_event(void (View::*layout_func)()) {
-    LayoutType prev_type = view_layout.get_layout_type();
+    PanelLayoutType prev_type = view_layout.get_layout_type();
     (this->*layout_func)();
-    LayoutType new_type = view_layout.get_layout_type();
+    PanelLayoutType new_type = view_layout.get_layout_type();
 
     if (prev_type == new_type) {
         return;
@@ -36,10 +45,10 @@ void View::layout_event(void (View::*layout_func)()) {
     int prev_cols = 1;
     int new_cols = 1;
 
-    if (prev_type == LayoutType::Facing || prev_type == LayoutType::ContinuousFacing) {
+    if (prev_type == PanelLayoutType::Facing || prev_type == PanelLayoutType::ContinuousFacing) {
         prev_cols = 2;
     }
-    if (new_type == LayoutType::Facing || new_type == LayoutType::ContinuousFacing) {
+    if (new_type == PanelLayoutType::Facing || new_type == PanelLayoutType::ContinuousFacing) {
         new_cols = 2;
     }
 
@@ -64,11 +73,11 @@ void View::layout_event(void (View::*layout_func)()) {
     render();
 }
 
-void View::set_layout_type_singlepage() { view_layout.set_layout_type(LayoutType::SinglePage); }
-void View::set_layout_type_continuous() { view_layout.set_layout_type(LayoutType::Continuous); }
-void View::set_layout_type_facing() { view_layout.set_layout_type(LayoutType::Facing); }
+void View::set_layout_type_singlepage() { view_layout.set_layout_type(PanelLayoutType::SinglePage); }
+void View::set_layout_type_continuous() { view_layout.set_layout_type(PanelLayoutType::Continuous); }
+void View::set_layout_type_facing() { view_layout.set_layout_type(PanelLayoutType::Facing); }
 void View::set_layout_type_continuousfacing() {
-    view_layout.set_layout_type(LayoutType::ContinuousFacing);
+    view_layout.set_layout_type(PanelLayoutType::ContinuousFacing);
 }
 
 // A vertical Page Slot for Continous Layout modes consists of the following elements so that spacer
@@ -105,7 +114,7 @@ void View::PopulateLayout() {
 
     std::vector<Panel> panels;
 
-    if (layout_type == LayoutType::SinglePage || layout_type == LayoutType::Continuous) {
+    if (layout_type == PanelLayoutType::SinglePage || layout_type == PanelLayoutType::Continuous) {
         for (uint32_t i = 0; i < pg_cnt; i++) {
             auto sz = g_document->get_page_dims(i);
             Slot s(Rect(0, 0, sz.width, sz.height), 1.f, i);
@@ -136,6 +145,11 @@ void View::PopulateLayout() {
 ///////////////////////////////////////////////////////////////////////////////////////////
 // Zoom Methods
 
+inline void View::invalidate_render_cache_for_zoom() {
+  g_document->invalidate_render_cache();
+}
+
+
 void View::zoom_event(void (View::*zoom_func)()) {
     float prev_zoom = zoom.get_zoom_level();
     (this->*zoom_func)();
@@ -146,6 +160,9 @@ void View::zoom_event(void (View::*zoom_func)()) {
     if (prev_zoom == new_zoom) {
         return;
     }
+
+    // Invalidate Document Render Cache when changing zoom level
+    invalidate_render_cache_for_zoom();
 
     // Calculate revised current_panel_position for new zoom level
     float zoom_factor = new_zoom / prev_zoom;
@@ -190,7 +207,7 @@ void View::zoom_fit_page() {
 
     int pagelayout_width = 0;
     int pagelayout_height = 0;
-    if (layout_type == LayoutType::Facing || layout_type == LayoutType::ContinuousFacing) {
+    if (layout_type == PanelLayoutType::Facing || layout_type == PanelLayoutType::ContinuousFacing) {
         auto page1_dims = g_document->get_page_dims(current_panel_index);
 
         // setting page2 default to -border_px to offset the space between both pages
@@ -232,7 +249,7 @@ void View::zoom_fit_width() {
 
     int pagelayout_width = 0;
     //int pagelayout_height = 0;
-    if (layout_type == LayoutType::Facing || layout_type == LayoutType::ContinuousFacing) {
+    if (layout_type == PanelLayoutType::Facing || layout_type == PanelLayoutType::ContinuousFacing) {
         auto page1_dims = g_document->get_page_dims(current_panel_index);
 
         // setting page2 default to -border_px to offset the space between both pages
@@ -376,16 +393,16 @@ void View::CalculateVisiblePanels() {
     Point viewport_center(view_viewport.center_x(), view_viewport.center_y());
 
     switch (layout_type) {
-        case LayoutType::SinglePage:
+        case PanelLayoutType::SinglePage:
             CalculateVisiblePanels_SinglePage(viewport_center);
             break;
-        case LayoutType::Facing:
+        case PanelLayoutType::Facing:
             CalculateVisiblePanels_Facing(viewport_center);
             break;
-        case LayoutType::Continuous:
+        case PanelLayoutType::Continuous:
             CalculateVisiblePanels_Continuous(viewport_center);
             break;
-        case LayoutType::ContinuousFacing:
+        case PanelLayoutType::ContinuousFacing:
             CalculateVisiblePanels_ContinuousFacing(viewport_center);
             break;
     }
@@ -607,9 +624,17 @@ void View::paintEvent(PaintEvent& /*event*/) {
 
     const auto& params = view_layout.get_params();
 
+    typedef std::chrono::high_resolution_clock clock;
+     auto t0 = clock::now();
+
     for (auto panel : visible_panels) {
         panel.paint_event(p, params.get_border_width_px(), params.get_border_color());
     }
+
+    auto t1 = clock::now();
+    std::chrono::duration<double, std::milli> fp_ms = t1 - t0;
+    std::cout << "Rendering time: " << fp_ms.count() << " ms\n";
+
 
     auto range = scroll.get_scroll_range();
     int layout_height = view_layout.get_layout_height(zoom.get_zoom_level());
@@ -625,64 +650,6 @@ bool View::keyPressEvent(KeyEvent& e) {
 
     bool result = true;
     switch (e.modifiers()) {
-        case KeyEvent::MNone:
-            switch (e.key()) {
-                case KeyEvent::KLeft:
-                    break;
-                case KeyEvent::KRight:
-                    break;
-                case KeyEvent::KHome:
-                    scroll_event(&View::scroll_home);
-                    break;
-                case KeyEvent::KEnd:
-                    scroll_event(&View::scroll_end);
-                    break;
-                case KeyEvent::KUp:
-                    scroll_event(&View::scroll_lineup);
-                    break;
-                case KeyEvent::KDown:
-                    scroll_event(&View::scroll_linedown);
-                    break;
-                case KeyEvent::KPageUp:
-                    scroll_event(&View::scroll_pageup);
-                    break;
-                case KeyEvent::KPageDown:
-                    scroll_event(&View::scroll_pagedown);
-                    break;
-
-                case KeyEvent::KEscape:
-                    // escStatusBar();
-                    break;
-                case KeyEvent::KDelete:
-                    // escStatusBar();
-                    // if (deleteSelected() == 0)
-                    //{
-                    //  //textBuffer_->del(cursor_);
-                    //  //setCursor(cursor_);
-                    //  render();
-                    //}
-                    break;
-                case KeyEvent::KBackspace:
-                    // if (deleteSelected() == 0)
-                    //{
-                    //  //textBuffer_->backspace(cursor_);
-                    //  //setCursor(cursor_);
-                    //  render();
-                    //}
-                    break;
-                case KeyEvent::KReturn: {
-                    // deleteSelected();
-                    // escStatusBar();
-                    // textBuffer_->insert(cursor_, L"\n");
-                    // setCursor(cursor_);
-                    render();
-                    break;
-                }
-                default:
-                    result = false;
-                    break;
-            };
-            break;
         case KeyEvent::MLCtrl:
         case KeyEvent::MRCtrl:
             switch (e.key()) {
@@ -723,6 +690,12 @@ bool View::keyPressEvent(KeyEvent& e) {
                     layout_event(&View::set_layout_type_continuousfacing);
                     //render();
                     break;
+                case KeyEvent::KUp:
+                    scroll_event(&View::scroll_home);
+                    break;
+                case KeyEvent::KDown:
+                    scroll_event(&View::scroll_end);
+                    break;
                 case KeyEvent::KHome:
                     scroll_event(&View::scroll_home);
                     //render();
@@ -757,8 +730,63 @@ bool View::keyPressEvent(KeyEvent& e) {
             }
             break;
         default:
-            result = false;
-            break;
+        //case KeyEvent::MNone:
+          switch (e.key()) {
+            case KeyEvent::KLeft:
+              break;
+            case KeyEvent::KRight:
+              break;
+            case KeyEvent::KHome:
+              scroll_event(&View::scroll_home);
+              break;
+            case KeyEvent::KEnd:
+              scroll_event(&View::scroll_end);
+              break;
+            case KeyEvent::KUp:
+              scroll_event(&View::scroll_lineup);
+              break;
+            case KeyEvent::KDown:
+              scroll_event(&View::scroll_linedown);
+              break;
+            case KeyEvent::KPageUp:
+              scroll_event(&View::scroll_pageup);
+              break;
+            case KeyEvent::KPageDown:
+              scroll_event(&View::scroll_pagedown);
+              break;
+
+            case KeyEvent::KEscape:
+              // escStatusBar();
+              break;
+            case KeyEvent::KDelete:
+              // escStatusBar();
+              // if (deleteSelected() == 0)
+              //{
+              //  //textBuffer_->del(cursor_);
+              //  //setCursor(cursor_);
+              //  render();
+              //}
+              break;
+            case KeyEvent::KBackspace:
+              // if (deleteSelected() == 0)
+              //{
+              //  //textBuffer_->backspace(cursor_);
+              //  //setCursor(cursor_);
+              //  render();
+              //}
+              break;
+            case KeyEvent::KReturn: {
+              // deleteSelected();
+              // escStatusBar();
+              // textBuffer_->insert(cursor_, L"\n");
+              // setCursor(cursor_);
+              render();
+              break;
+            }
+            default:
+              result = false;
+              break;
+          };
     }
 
     return result; 

@@ -5,7 +5,7 @@
 #include "../widget.h"
 
 #include "geometry.h"
-#include "layout.h"
+#include "panel_layout.h"
 #include "document.h"
 #include "zoom.h"
 #include "scroll.h"
@@ -21,7 +21,8 @@ namespace PdfViewer::Viewer {
 /// </summary>
 class View : public Widget {
 public:
-    View(Widget* parent, Params params, LayoutType type);
+    View(Widget* parent, Params params, PanelLayoutType type);
+    ~View() final;
 
 protected:
     void resizeEvent(ResizeEvent&) override;
@@ -29,7 +30,7 @@ protected:
     bool keyPressEvent(KeyEvent&) override;
 
 private:
-    Layout view_layout;
+    PanelLayout view_layout;
     Viewport view_viewport;
 
     Zoom zoom;
@@ -49,6 +50,7 @@ private:
 
     // Zoom Methods
     void zoom_event(void (View::*zoom_func)());
+    void invalidate_render_cache_for_zoom();
     void zoom_in();
     void zoom_out();
     void zoom_to(float zoom_to);

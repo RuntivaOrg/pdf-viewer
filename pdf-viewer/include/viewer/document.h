@@ -5,6 +5,8 @@
 #include "pdfium/free_deleter.h"
 #include "pdfium/file_access_test_loader.h"
 
+#include "core/rendered_page_cache.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -109,7 +111,8 @@ enum class OutputFormat {
 
 struct Options {
   [[maybe_unused]]
-  Options() = default;
+  Options();
+  ~Options();
 
   bool show_config = false;
   bool show_metadata = false;
@@ -137,16 +140,31 @@ struct Options {
   time_t time = -1;
 };
 
+
 struct FPDF_FORMFILLINFO_PDFiumTest final : public FPDF_FORMFILLINFO {
+  FPDF_FORMFILLINFO_PDFiumTest();
+  //FPDF_FORMFILLINFO_PDFiumTest(std::map<int, ScopedFPDFPage> loaded_pages, FPDF_FORMHANDLE form_handle);
+  ~FPDF_FORMFILLINFO_PDFiumTest();
+  FPDF_FORMFILLINFO_PDFiumTest(const FPDF_FORMFILLINFO_PDFiumTest&) = delete;
+  
+  FPDF_FORMFILLINFO_PDFiumTest& operator=(
+      const FPDF_FORMFILLINFO_PDFiumTest& other) {
+    
+      // creating a new map -- only time we copy is initialization
+      loaded_pages = std::map<int, ScopedFPDFPage>();
+
+      return *this;
+  }
+
   // Hold a map of the currently loaded pages in order to avoid them
   // to get loaded twice.
   std::map<int, ScopedFPDFPage> loaded_pages;
+  //std::unique_ptr<std::map<int, ScopedFPDFPage>> loaded_pages;
 
   // Hold a pointer of FPDF_FORMHANDLE so that PDFium app hooks can
   // make use of it.
   FPDF_FORMHANDLE form_handle;
 };
-
 
 int PageRenderFlagsFromOptions(const Options& options);
 FPDF_FORMFILLINFO_PDFiumTest* ToPDFiumTestFormFillInfo(
@@ -167,12 +185,12 @@ namespace PdfViewer::Viewer {
 class Document {
 public:
     Document(std::string name);
-    //~Document();
+    ~Document();
 
 [[maybe_unused]]
     void set_options(Options options);
     void load_document();
-    std::vector<uint8_t> load_page_ppm(int page_index, float scale);
+    std::vector<uint8_t> load_page_ppm(int page_index, float scale, int w, int h);
     void unload_document();
 
     uint32_t get_page_count() const;
@@ -183,10 +201,29 @@ public:
 
     Size get_page_dims(uint32_t page_index) const;
 
+    void invalidate_render_cache();
+
 private:
     Options _options;
     std::string _name;
     uint32_t _page_count;
+    
+    // Page sizes: Initially populated with first page when available on linearized PDFs, then subseqently populated for all pages.
+    class PageSizeData {
+     public:
+      PageSizeData(int start_pg_index, int end_pg_index, Size pg_size)
+          : start_page_index(start_pg_index), end_page_index(end_pg_index), page_size(pg_size) {}
+      int start_page_index;
+      int end_page_index;
+      Size page_size;
+    };
+
+    // Page Size Data
+    bool page_sizes_populated;
+    std::vector<PageSizeData> page_size_data;
+
+    // PDFLibrary Init
+    UNSUPPORT_INFO unsupported_info;
 
     std::unique_ptr<char, pdfium::FreeDeleter> file_contents;
     pdfium::TestLoader* m_pLoader;
@@ -203,9 +240,15 @@ private:
     ScopedFPDFDocument doc;
 
     FPDF_FORMFILLINFO_PDFiumTest form_callbacks;
-
-
     bool _is_linearized;
+
+    RenderedPageCache _rendered_cache;
+
+    void populate_page_size_data(FPDF_DOCUMENT doc,
+                                 FPDF_FORMFILLINFO_PDFiumTest* form_fill_info,
+                                 uint32_t page_count,
+                                 const std::function<void()>& idler);
+
 
     void initialize_PDFLibrary();
 
@@ -216,13 +259,15 @@ private:
                 const std::function<void()> &idler);
 
     bool ProcessPage(const std::string& name,
-                 FPDF_DOCUMENT doc,
-                 FPDF_FORMHANDLE form,
-                 FPDF_FORMFILLINFO_PDFiumTest* form_fill_info,
-                 const int page_index,
-                 const Options& options,
-        std::vector<uint8_t>& img_buffer,
-        const std::function<void()>& idler);
+                     FPDF_DOCUMENT doc,
+                     FPDF_FORMHANDLE form,
+                     FPDF_FORMFILLINFO_PDFiumTest* form_fill_info,
+                     const int page_index,
+                     const Options& options,
+                     int width,
+                     int height,
+                     std::vector<uint8_t>& img_buffer,
+                     const std::function<void()>& idler);
 
 
     static void print_last_error();

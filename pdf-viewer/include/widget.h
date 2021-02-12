@@ -21,18 +21,18 @@ class Widget : public PaintDevice, public Layoutable {
 
 public:
     Widget(Widget* parent = nullptr);
-    virtual ~Widget() override;
+    ~Widget() override;
 
     // Size & Position
-    virtual void resize(int width, int height) override;
+    void resize(int width, int height) override;
     int width() const override;
     void setWidth(int);
     int height() const override;
     void setHeight(int);
     int left() const;
-    virtual void setLeft(int) override;
+    void setLeft(int) override;
     int top() const;
-    virtual void setTop(int) override;
+    void setTop(int) override;
 
     // Hierarchy
     Uint32 windowId() const;
@@ -47,7 +47,7 @@ public:
     bool hasFocus();
 
     // Rendering
-    virtual SDL_Renderer* renderer() override;
+    SDL_Renderer* renderer() final;
 
     virtual int gLeft() const;
     virtual int gTop() const;
@@ -55,10 +55,10 @@ public:
     void setLayout(Layout*);
     Layout* layout();
     const Layout* layout() const;
-    virtual int maxHeight() const override;
-    virtual int minHeight() const override;
-    virtual int maxWidth() const override;
-    virtual int minWidth() const override;
+    int maxHeight() const override;
+    int minHeight() const override;
+    int maxWidth() const override;
+    int minWidth() const override;
 
 protected:
     // some of following events handlers return bool, true means event handled and does not require

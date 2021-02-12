@@ -9,7 +9,7 @@
 //#include "docpane/pdf_doc_mock.hpp"
 
 #include "viewer/view.h"
-#include "viewer/layout.h"
+#include "viewer/panel_layout.h"
 #include "viewer/document.h"
 #include "viewer/params.h"
 #include "globals.h"
@@ -36,7 +36,7 @@ MainViewerWindow::MainViewerWindow(Widget *parent):
     //PdfViewer::Viewer::Document doc("second.pdf");
     g_document->load_document();
     activeScreen_ = new PdfViewer::Viewer::View(this, params,
-                                                PdfViewer::Viewer::LayoutType::Continuous);
+                                                PdfViewer::Viewer::PanelLayoutType::Continuous);
 
   //using namespace std::placeholders;
   //tabs_.setTextBuffer = std::bind(&MainViewerWindow::setTextBuffer, this, _1);
@@ -46,6 +46,13 @@ MainViewerWindow::MainViewerWindow(Widget *parent):
   screenLayout_.addLayoutable(activeScreen_);
   layout_.addLayoutable(&screenLayout_);
   activeScreen_->setFocus();
+}
+
+MainViewerWindow::~MainViewerWindow() {
+  //if (g_document != nullptr) {
+  //  g_document->~Document();
+  //  g_document = nullptr;
+  //}
 }
 
 #pragma GCC diagnostic push

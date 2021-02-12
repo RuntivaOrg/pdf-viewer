@@ -59,7 +59,7 @@ Application::Application(int&, char**)
     if (TTF_Init() != 0) {
         printf("TTF_Init error: %s\n", std::string(SDL_GetError()).c_str());
     }
-}
+    }
 
 Application::~Application() {   
     SDL_Quit();
@@ -166,7 +166,7 @@ void Application::update() {
                 KeyEvent ke{static_cast<KeyEvent::Key>(e.key.keysym.sym),
                             static_cast<unsigned int>(SDL_GetModState()),
                             static_cast<bool>(e.key.repeat)};
-                auto w = focusWidget();
+                Widget* w = focusWidget();
                 if (!w)
                     w = widgetByWindowId(e.key.windowID);
                 else if (w->ancestor() != widgetByWindowId(e.key.windowID)) {
@@ -183,7 +183,7 @@ void Application::update() {
                 KeyEvent ke{static_cast<KeyEvent::Key>(e.key.keysym.sym),
                             static_cast<unsigned int>(SDL_GetModState()),
                             static_cast<bool>(e.key.repeat)};
-                auto w = focusWidget();
+                Widget* w = focusWidget();
                 if (!w)
                     w = widgetByWindowId(e.key.windowID);
                 else if (w->ancestor() != widgetByWindowId(e.key.windowID)) {
@@ -199,7 +199,7 @@ void Application::update() {
             }
             case SDL_TEXTINPUT: {
                 TextInputEvent tie{toUtf16(e.text.text)};
-                auto w = focusWidget();
+                Widget* w = focusWidget();
                 if (!w)
                     w = widgetByWindowId(e.key.windowID);
                 else if (w->ancestor() != widgetByWindowId(e.key.windowID)) {
@@ -221,7 +221,7 @@ void Application::update() {
     const auto isEmpty = (SDL_PeepEvents(&e, 1, SDL_PEEKEVENT, SDL_FIRSTEVENT, SDL_LASTEVENT) == 0);
     if (isEmpty || SDL_GetTicks() > last_update + 1000 / 60) {
         //auto x = SDL_GetTicks();
-        for (auto w : widget_list)
+        for (Widget* w : widget_list)
             if (w->needRepaint()) {
                 PaintEvent pe;
                 w->internalPaint(pe);
@@ -248,8 +248,9 @@ void Application::removeWidget(Widget* w) {
     widget_list.erase(std::remove(begin(widget_list), end(widget_list), w), end(widget_list));
 }
 
+// TODO: Make return const
 Widget* Application::widgetByWindowId(Uint32 id) {
-    for (const auto w : widget_list)
+    for (Widget* w : widget_list)
         if (id == w->windowId()) return w;
     return nullptr;
 }

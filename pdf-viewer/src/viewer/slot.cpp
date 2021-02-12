@@ -40,7 +40,7 @@ void Slot::draw_border(Painter& p, uint32_t border_width_px, Color border_color)
 void Slot::draw_image(Painter &p, int x, int y, int w, int h) const {
 
     if (g_document) {
-        auto ppm_data = g_document->load_page_ppm(pg_index, slot_scale);
+        auto ppm_data = g_document->load_page_ppm(pg_index, slot_scale, w, h);
         p.render_image(ppm_data, x, y, w, h);
     }
 }

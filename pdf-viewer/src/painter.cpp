@@ -83,7 +83,7 @@ void Painter::renderGlyph(wchar_t ch, int x, int y, Color fg, Color bg)
         glyphCacheAge_.erase(begin(glyphCacheAge_));
       }
     }
-    auto surf = TTF_RenderGlyph_Shaded(font_, static_cast<uint16_t>(ch), toSdlColor(fg), toSdlColor(bg));
+    SDL_Surface* surf = TTF_RenderGlyph_Shaded(font_, static_cast<uint16_t>(ch), toSdlColor(fg), toSdlColor(bg));
     if (surf == nullptr)
     {
       setColor(bg);
@@ -121,28 +121,50 @@ int Painter::glyphHeight() const
 }
 
 
+#include <iostream>
+#include <fstream>
+
 void Painter::render_image(const std::vector<uint8_t>& img_buf, int x, int y, int w, int h) {
 
   /* load the image */
   SDL_Surface *image = nullptr;
   
-  SDL_RWops* rw = SDL_RWFromMem(static_cast<void*>(const_cast<uint8_t*>(img_buf.data())), static_cast<int>(img_buf.size()));
-  image = IMG_LoadPNG_RW(rw);
+  //// PNG Image Format
+  //std::ofstream fout("c:\\temp\\i.png", std::ios::out | std::ios::binary);
+  //fout.write((char*)img_buf.data(), img_buf.size());
+  //fout.close();
 
+  //SDL_RWops* rw = SDL_RWFromMem(static_cast<void*>(const_cast<uint8_t*>(img_buf.data())), static_cast<int>(img_buf.size()));
+
+  //// Return the seek pointer of the RWop to the beginning so that the file can
+  //// be read
+  //SDL_RWseek(rw, 0, RW_SEEK_SET);
+
+  //// load the image
+  //image = IMG_LoadPNG_RW(rw);
+
+  //if (!image) {
+  //  printf("IMG_LoadPNG_RW: %s\n", IMG_GetError());
+  //  // handle error
+  //}
+
+  // BGRA32 Image Format
+  image = SDL_CreateRGBSurfaceWithFormat(0, w, h, 32, SDL_PIXELFORMAT_BGRA32);
+  
   //image = SDL_CreateRGBSurfaceWithFormat(0, w, h, 32, SDL_PIXELFORMAT_BGRA32);
   //image = SDL_CreateRGBSurfaceWithFormat(0, w, h, 24, SDL_PIXELFORMAT_RGB24);
   //SDL_PIXELFORMAT_RGB24
   //image = SDL_CreateRGBSurface(0, w, h, 32, 0xFF000000, 0xFF0000, 0xFF00, 0xFF);
 
-  //if (SDL_MUSTLOCK(image)) SDL_LockSurface(image);
-  ////image = SDL_CreateRGBSurface(0, w, h, 32, 0xFF, 0xFF00, 0xFF0000, 0xFF000000);
-  //if (image) {
-  //    memcpy(image->pixels, img_buf.data(), img_buf.size());// static_cast<size_t>(w * h * 4));
-  //}
+  if (SDL_MUSTLOCK(image)) SDL_LockSurface(image);
+  //image = SDL_CreateRGBSurface(0, w, h, 32, 0xFF, 0xFF00, 0xFF0000, 0xFF000000);
+  if (image) {
+      memcpy(image->pixels, img_buf.data(), img_buf.size());// static_cast<size_t>(w * h * 4));
+  }
 
-  //if (SDL_MUSTLOCK(image)) SDL_UnlockSurface(image);
+  if (SDL_MUSTLOCK(image)) SDL_UnlockSurface(image);
 
-  //free(data);
+//  free(data);
 
 
   ////const char* filename = "C:\\Temp\\SDL2_IMage\\demos\\lena.bmp";

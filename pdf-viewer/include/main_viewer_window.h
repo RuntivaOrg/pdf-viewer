@@ -15,13 +15,14 @@
 class MainViewerWindow : public Widget {
 public:
     MainViewerWindow(Widget* parent = nullptr);
+    ~MainViewerWindow() final;
 
 protected:
-  virtual bool keyPressEvent(KeyEvent &)  override;
+  bool keyPressEvent(KeyEvent &)  override;
 private:
   //PdfScreen *activeScreen_;
-    PdfViewer::Viewer::View* activeScreen_;
-    Layout layout_;
+  PdfViewer::Viewer::View* activeScreen_;
+  Layout layout_;
   //Tabs tabs_;
   Layout screenLayout_;
 

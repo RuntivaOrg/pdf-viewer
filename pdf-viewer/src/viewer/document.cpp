@@ -11,6 +11,32 @@
 //#include <sstream>
 #include <string>
 #include <vector>
+#include <iterator>
+
+Options::Options() {
+}
+
+Options::~Options() {
+}
+
+FPDF_FORMFILLINFO_PDFiumTest::FPDF_FORMFILLINFO_PDFiumTest() : loaded_pages(std::map<int, ScopedFPDFPage>()) {
+  
+}
+
+// FPDF_FORMFILLINFO_PDFiumTest::FPDF_FORMFILLINFO_PDFiumTest(std::map<int, ScopedFPDFPage> loaded_pages, FPDF_FORMHANDLE form_handle) :
+// loaded_pages(std::move(loaded_pages)), form_handle(std::move(form_handle)) {
+// }
+
+FPDF_FORMFILLINFO_PDFiumTest::~FPDF_FORMFILLINFO_PDFiumTest() {
+  loaded_pages.clear();
+}
+
+//FPDF_FORMFILLINFO_PDFiumTest::FPDF_FORMFILLINFO_PDFiumTest(
+//    const FPDF_FORMFILLINFO_PDFiumTest& other) {
+//  loaded_pages = std::map<int, ScopedFPDFPage>();
+//  //loaded_pages.insert(Begin(other), other.end());
+//  form_handle = other.form_handle;
+//}
 
 [[maybe_unused]] int PageRenderFlagsFromOptions(const Options& options) {
   int flags = FPDF_ANNOT;
@@ -103,16 +129,19 @@ Document::Document(std::string name) : _name(name) {
     file_access = {};
     file_avail = {};
     hints = {};
-    _options.output_format = OutputFormat::kPng; // kBgra32; //  kRgb24; // kBgra32; // kBgr24;
-    form_callbacks = {};
+    _options.output_format = OutputFormat::kBgra32;  //kPng;  // kBgra32; //  kRgb24; // kBgra32; // kBgr24;
+    form_callbacks = {}; 
 
+    _rendered_cache = RenderedPageCache(); // currently use default of enabled 10MB cache
+
+    unsupported_info = {};
     initialize_PDFLibrary();
 
 }
 
-//Document::~Document() {
-//    FPDF_DestroyLibrary();
-//}
+Document::~Document() {
+    FPDF_DestroyLibrary();
+}
 
 void Document::set_options(Options options) {
     _options = options;
@@ -138,7 +167,6 @@ void Document::initialize_PDFLibrary() {
     FPDF_InitLibraryWithConfig(&config);
 
 
-    UNSUPPORT_INFO unsupported_info = {};
     unsupported_info.version = 1;
     unsupported_info.FSDK_UnSupport_Handler = ExampleUnsupportedHandler;
 
@@ -163,7 +191,9 @@ void Document::load_document() {
     std::string filename = "airplane.pdf";
 #else
     //std::string filename = "C:\\work\\PDF\\SampleFiles\\airplane.pdf";
-    std::string filename = "C:\\work\\PDF\\SampleFiles\\13_afh_ch11.pdf";
+    //std::string filename = "C:\\work\\PDF\\SampleFiles\\13_afh_ch11.pdf";
+    std::string filename = "C:\\work\\PDF\\ISO_32000-2_2017.pdf";
+
 #endif
 
     //std::string filename = "C:\\work\\PDF\\SampleFiles\\receipt.pdf";
@@ -189,17 +219,84 @@ void Document::unload_document() {
 
 uint32_t Document::get_page_count() const { return _page_count; }
 
-Size Document::get_page_dims(uint32_t page_index) const {
-    assert(page_index < _page_count);
 
-    float left, bottom, right, top;
+// Private method to initialize the page_size data details
+void Document::populate_page_size_data(
+    FPDF_DOCUMENT doc,
+    FPDF_FORMFILLINFO_PDFiumTest* form_fill_info,
+    uint32_t page_count,
+    const std::function<void()>& idler) {
+  assert(page_count > 0);
 
-    if (!get_page_bbox(static_cast<int>(page_index), &left, &bottom, &right, &top)) {
-        printf("ERROR: unable to get page size.");
-        return Size{612,792};
+  int start_pg_index = -1;
+  int end_pg_index = -1;
+  Size cur_pg_size(0, 0);
+
+  page_size_data.clear();
+
+  for (int pg_idx = 0; pg_idx < static_cast<int>(page_count); pg_idx++) {
+    FPDF_PAGE page = get_page_for_index(form_fill_info, doc, pg_idx);
+    if (!page)
+      return;   // TODO: What to do when this fails??
+
+    auto width = static_cast<int>(FPDF_GetPageWidthF(page));
+    auto height = static_cast<int>(FPDF_GetPageHeightF(page));
+
+    // init vars on first loop iter
+    if (pg_idx == 0) {
+      start_pg_index = pg_idx;
+      cur_pg_size = Size(width, height);
+    } else {
+      if (width != cur_pg_size.width || height != cur_pg_size.height) {
+        end_pg_index = pg_idx - 1;
+
+        page_size_data.push_back(
+            PageSizeData(start_pg_index, end_pg_index, cur_pg_size));
+
+        start_pg_index = pg_idx;
+        end_pg_index = -1;
+        cur_pg_size = Size(width, height);
+      }
     }
+  }
 
-    return Size{ static_cast<int>(right - left), static_cast<int>(top - bottom) };
+  if (page_size_data.size() == 0 ||
+      page_size_data.back().end_page_index < static_cast<int>(page_count) - 1) {
+    page_size_data.push_back(
+        PageSizeData(start_pg_index, static_cast<int>(page_count) - 1, cur_pg_size));
+  }
+
+  page_sizes_populated = true;
+}
+
+
+Size Document::get_page_dims(uint32_t page_index) const {
+  assert(page_index >= 0 && page_index < _page_count);
+
+  if (page_sizes_populated) {
+    for (auto it = page_size_data.begin(); it < page_size_data.end(); it++) {
+      if (it->start_page_index <= static_cast<int>(page_index) &&
+          static_cast<int>(page_index) <= it->end_page_index) {
+        return it->page_size;
+      }
+    }
+  }
+
+  assert(true);  // Page dims not found
+
+  float left, bottom, right, top;
+
+  if (!get_page_bbox(static_cast<int>(page_index), &left, &bottom, &right,
+                     &top)) {
+    printf("ERROR: unable to get page size.");
+    return Size{612, 792};
+  }
+
+  return Size{static_cast<int>(right - left), static_cast<int>(top - bottom)};
+}
+
+void Document::invalidate_render_cache() {
+    _rendered_cache.flush();
 }
 
 void Document::print_last_error() {
@@ -392,7 +489,7 @@ void Document::ProcessPdf(const std::string &name,
     platform_callbacks.Field_browse = ExampleFieldBrowse;
 #endif // PDF_ENABLE_V8
 
-    form_callbacks = {};
+    form_callbacks = FPDF_FORMFILLINFO_PDFiumTest();
 #ifdef PDF_ENABLE_XFA
     form_callbacks.version = 2;
     form_callbacks.xfa_disabled =
@@ -437,6 +534,10 @@ void Document::ProcessPdf(const std::string &name,
 #endif
 
     _page_count = FPDF_GetPageCount(doc.get());
+
+
+    //&form_callbacks
+    populate_page_size_data(doc.get(), &form_callbacks, _page_count, idler);
     // int processed_pages = 0;
     // int bad_pages = 0;
     // int first_page = options.pages ? options.first_page : 0;
@@ -483,7 +584,9 @@ bool Document::ProcessPage(const std::string &name,
                            FPDF_FORMFILLINFO_PDFiumTest *form_fill_info,
                            const int page_index,
                            const Options &options,
-                            std::vector<uint8_t>& img_buffer,
+                           int width,
+                           int height,
+                           std::vector<uint8_t>& img_buffer,
                            const std::function<void()> &idler)
 {
      FPDF_PAGE page = get_page_for_index(form_fill_info, doc, page_index);
@@ -495,8 +598,8 @@ bool Document::ProcessPage(const std::string &name,
      if (!options.scale_factor_as_string.empty())
          std::stringstream(options.scale_factor_as_string) >> scale;
 
-     auto width = static_cast<int>(FPDF_GetPageWidthF(page) * scale);
-     auto height = static_cast<int>(FPDF_GetPageHeightF(page) * scale);
+     // auto width = static_cast<int>(FPDF_GetPageWidthF(page) * scale);
+     // auto height = static_cast<int>(FPDF_GetPageHeightF(page) * scale);
      int alpha = FPDFPage_HasTransparency(page) ? 1 : 0;
      ScopedFPDFBitmap bitmap(FPDFBitmap_Create(width, height, alpha));
 
@@ -534,6 +637,19 @@ bool Document::ProcessPage(const std::string &name,
 
          FPDF_RenderPage_Close(page);
          idler();
+
+         // checking actual output img width/height
+         [[maybe_unused]]
+         int test_width = FPDFBitmap_GetWidth(bitmap.get());
+         [[maybe_unused]]
+         int test_height = FPDFBitmap_GetHeight(bitmap.get());
+
+         if (width != test_width || height != test_height) {
+           printf(
+               "Output Img not matching requested size: actual: (%d x %d) vs "
+               "expected: (%d x %d)\n",
+               test_width, test_height, width, height);
+         }
 
          int stride = FPDFBitmap_GetStride(bitmap.get());
          void *buffer = FPDFBitmap_GetBuffer(bitmap.get());
@@ -620,7 +736,13 @@ bool Document::ProcessPage(const std::string &name,
      return !!bitmap;
 }
 
-std::vector<uint8_t> Document::load_page_ppm(int page_index, float scale) {
+std::vector<uint8_t> Document::load_page_ppm(int page_index, float scale, int width, int height) {
+
+    // First check cache:
+    auto ppm = _rendered_cache.get(page_index, scale);
+    if (ppm.has_value()) {
+        return ppm.value();
+    }
 
     if (_is_linearized) {
         int avail_status = PDF_DATA_NOTAVAIL;
@@ -637,7 +759,14 @@ std::vector<uint8_t> Document::load_page_ppm(int page_index, float scale) {
     // TODO: Convert to float (not string as this is no longer coming from command line.
     _options.scale_factor_as_string = std::to_string(scale);
     std::vector<uint8_t> result;
-    ProcessPage(_name, doc.get(), form.get(), &form_callbacks, page_index, _options, result, idler);
+    ProcessPage(_name, doc.get(), form.get(), &form_callbacks, page_index, _options, width, height, result, idler);
+
+    _rendered_cache.add(page_index, scale, result);
+    // We still have to validate that item is in cache. If cache is disabled, it never gets populated.
+    auto ppm2 = _rendered_cache.get(page_index, scale);
+    if (ppm2.has_value()) {
+      return ppm2.value();
+    }
 
     return result;
     // if (ProcessPage(_name, doc.get(), form.get(), &form_callbacks, page_index, _options, idler)) {
@@ -656,3 +785,4 @@ std::vector<uint8_t> Document::load_page_ppm(int page_index, float scale) {
 }
 
 }  // namespace PdfViewer::Viewer
+

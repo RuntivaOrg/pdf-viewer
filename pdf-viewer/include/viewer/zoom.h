@@ -22,7 +22,8 @@ struct ZoomInfo {
 class Zoom {
 public:
     Zoom(float zoom_level = 1.0f);
-
+    ~Zoom();
+    
     float get_zoom_level() const;
     ZoomMode get_zoom_mode() const;
 
