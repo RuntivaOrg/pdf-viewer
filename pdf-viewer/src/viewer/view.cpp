@@ -1,6 +1,7 @@
 #include "viewer/view.h"
 #include "events/key_event.h"
 #include "events/resize_event.h"
+#include "application.h"
 #include "globals.h"
 
 #include <iostream>
@@ -676,19 +677,15 @@ bool View::keyPressEvent(KeyEvent& e) {
                     break;
                 case KeyEvent::K7:
                     layout_event(&View::set_layout_type_singlepage);
-                    //render();
                     break;
                 case KeyEvent::K8:
                     layout_event(&View::set_layout_type_continuous);
-                    //render();
                     break;
                 case KeyEvent::K9:
                     layout_event(&View::set_layout_type_facing);
-                    //render();
                     break;
                 case KeyEvent::K0:
                     layout_event(&View::set_layout_type_continuousfacing);
-                    //render();
                     break;
                 case KeyEvent::KUp:
                     scroll_event(&View::scroll_home);
@@ -698,13 +695,9 @@ bool View::keyPressEvent(KeyEvent& e) {
                     break;
                 case KeyEvent::KHome:
                     scroll_event(&View::scroll_home);
-                    //render();
                     break;
                 case KeyEvent::KEnd:
                     scroll_event(&View::scroll_end);
-                    // setCursor((int)((*textBuffer_)[textBuffer_->size() - 1].size()),
-                    //          (int)(textBuffer_->size() - 1));
-                    //render();
                     break;
                 case KeyEvent::KN: {
                     render();
@@ -730,7 +723,6 @@ bool View::keyPressEvent(KeyEvent& e) {
             }
             break;
         default:
-        //case KeyEvent::MNone:
           switch (e.key()) {
             case KeyEvent::KLeft:
               break;
@@ -756,7 +748,7 @@ bool View::keyPressEvent(KeyEvent& e) {
               break;
 
             case KeyEvent::KEscape:
-              // escStatusBar();
+              Application::instance()->quit_app();
               break;
             case KeyEvent::KDelete:
               // escStatusBar();

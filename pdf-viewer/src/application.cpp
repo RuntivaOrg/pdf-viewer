@@ -255,6 +255,10 @@ Widget* Application::widgetByWindowId(Uint32 id) {
     return nullptr;
 }
 
+void Application::quit_app() {
+    quit = true;
+}
+
 void Application::setFocusWidget(Widget* value) { focus_widget = value; }
 
 Widget* Application::focusWidget() const { return focus_widget; }

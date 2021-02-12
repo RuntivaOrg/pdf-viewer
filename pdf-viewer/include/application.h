@@ -28,6 +28,7 @@ public:
     int exec();
     static Application* instance();
 
+    void quit_app();
     //static void update_callback();//void* app);
     void update();
 
